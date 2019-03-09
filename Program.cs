@@ -1,5 +1,6 @@
 ﻿using Altered.Pipeline;
 using Altered.Shared;
+using Destructurama;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -13,6 +14,10 @@ namespace alog
     {
         static void Main(string[] args)
         {
+            // todo build an AlteredPipeline that wraps abitrary Func<TRequest, Task<TResponse>>
+            // and runs it in a seperate process by serializing its arguments as json via stdin/out/err
+            //
+            // then do the same for EOF-seperated json into observable streams
             try
             {
                 var requestName = args.Skip(0).FirstOrDefault();
@@ -20,6 +25,7 @@ namespace alog
 
                 Log.Logger = new LoggerConfiguration()
                     .WithAlteredDefault()
+                    .Destructure.JsonNetTypes()
                     .CreateLogger();
 
                 var logData = JToken.ReadFrom(new JsonTextReader(Console.In));
