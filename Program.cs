@@ -14,10 +14,6 @@ namespace alog
     {
         static void Main(string[] args)
         {
-            // todo build an AlteredPipeline that wraps abitrary Func<TRequest, Task<TResponse>>
-            // and runs it in a seperate process by serializing its arguments as json via stdin/out/err
-            //
-            // then do the same for EOF-seperated json into observable streams
             try
             {
                 var requestName = args.Skip(0).FirstOrDefault();
@@ -28,19 +24,27 @@ namespace alog
                     .Destructure.JsonNetTypes()
                     .CreateLogger();
 
-                var logData = JToken.ReadFrom(new JsonTextReader(Console.In));
-                var log = new
+                using (var reader = new JsonTextReader(Console.In)
                 {
-                    Name = requestName,
-                    RequestId = requestId,
-                    Message = logData
-                };
+                    SupportMultipleContent = true
+                })
+                {
+                    while (reader.Read())
+                    {
+                        var logData = JToken.ReadFrom(reader);
+                        var log = new
+                        {
+                            Name = requestName,
+                            RequestId = requestId,
+                            Message = logData
+                        };
 
-                AlteredLog.Information(log);
+                        AlteredLog.Information(log);
 
-                var logJson = JsonConvert.SerializeObject(log, AlteredJson.DefaultJsonSerializerSettings);
-                Console.WriteLine(logJson);
-
+                        var logJson = JsonConvert.SerializeObject(log, AlteredJson.DefaultJsonSerializerSettings);
+                        Console.WriteLine(logJson);
+                    }
+                }
             }
             catch (Exception e)
             {
