@@ -1,6 +1,9 @@
-﻿using Altered.Pipeline;
+﻿using Altered.Aws;
+using Altered.Aws.Cloudwatch;
+using Altered.Pipeline;
 using Altered.Shared;
 using Destructurama;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
@@ -19,10 +22,13 @@ namespace alog
                 var requestName = args.Skip(0).FirstOrDefault();
                 var requestId = args.Skip(1).FirstOrDefault();
 
-                Log.Logger = new LoggerConfiguration()
-                    .WithAlteredDefault()
-                    .Destructure.JsonNetTypes()
-                    .CreateLogger();
+                var services = new ServiceCollection()
+                    .EnsureAwsRegion()
+                    .AddAlteredAws()
+                    .AddCloudwatchLogs()
+                    .BuildServiceProvider();
+
+                var logSink = services.GetService<CloudwatchLogsSink>();
 
                 using (var reader = new JsonTextReader(Console.In)
                 {
@@ -39,10 +45,8 @@ namespace alog
                             Message = logData
                         };
 
-                        AlteredLog.Information(log);
-
-                        var logJson = JsonConvert.SerializeObject(log, AlteredJson.DefaultJsonSerializerSettings);
-                        Console.WriteLine(logJson);
+                        var logJson = logSink.Log(log);
+                        Console.WriteLine($"{logJson}");
                     }
                 }
             }

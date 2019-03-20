@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Altered.Pipeline" Version="1.0.25" />
+    <PackageReference Include="Altered.Aws" Version="1.0.36" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
   </ItemGroup>
 
 </Project>
