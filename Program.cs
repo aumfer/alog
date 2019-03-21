@@ -15,20 +15,20 @@ namespace alog
 {
     class Program
     {
+        static ServiceProvider services = new ServiceCollection()
+            .EnsureAwsRegion()
+            .AddAlteredAws()
+            .AddCloudwatchLogs()
+            .BuildServiceProvider();
+
+        static CloudwatchLogsSink logSink = services.GetService<CloudwatchLogsSink>();
+
         static void Main(string[] args)
         {
             try
             {
                 var requestName = args.Skip(0).FirstOrDefault();
                 var requestId = args.Skip(1).FirstOrDefault();
-
-                var services = new ServiceCollection()
-                    .EnsureAwsRegion()
-                    .AddAlteredAws()
-                    .AddCloudwatchLogs()
-                    .BuildServiceProvider();
-
-                var logSink = services.GetService<CloudwatchLogsSink>();
 
                 using (var reader = new JsonTextReader(Console.In)
                 {
@@ -56,7 +56,7 @@ namespace alog
             }
             finally
             {
-                Log.CloseAndFlush();
+                logSink.Dispose();
             }
         }
     }
